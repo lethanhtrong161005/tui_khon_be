@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds">
+
+    <!-- Spring Boot Color Converters -->
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+    <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
+    <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
+
+    <!-- Retrieve properties from Spring Environment -->
+    <springProperty scope="context" name="LOG_PATH" source="logging.file.path" defaultValue="./logs" />
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="tui_khon_be" />
+
+    <!-- Logging Patterns -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%15.15t]){faint} %clr(%-5p) %clr([traceId=%X{traceId:-SYSTEM}]){yellow} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx" />
+
+    <property name="FILE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [traceId=%X{traceId:-SYSTEM}] %logger{36} - %msg%n" />
+
+    <!-- ============================================================ -->
+    <!-- 1. Console Appender                                          -->
+    <!-- ============================================================ -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ============================================================ -->
+    <!-- 2. Application Logs (logs/app/app.log)                        -->
+    <!-- ============================================================ -->
+    <appender name="APP_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/app/app.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/app/app-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>20MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ============================================================ -->
+    <!-- 3. Error Logs (logs/error/error.log) - ERROR level only       -->
+    <!-- ============================================================ -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/error/error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/error/error-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>20MB</maxFileSize>
+            <maxHistory>60</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ============================================================ -->
+    <!-- 4. Security & Auth Logs (logs/security/security.log)         -->
+    <!-- ============================================================ -->
+    <appender name="SECURITY_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/security/security.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/security/security-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>20MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ============================================================ -->
+    <!-- 5. Database & SQL Query Logs (logs/sql/sql.log)              -->
+    <!-- ============================================================ -->
+    <appender name="SQL_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/sql/sql.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/sql/sql-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>30MB</maxFileSize>
+            <maxHistory>15</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ============================================================ -->
+    <!-- Async Appenders for High Throughput Performance              -->
+    <!-- ============================================================ -->
+    <appender name="ASYNC_APP" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="APP_FILE" />
+    </appender>
+
+    <appender name="ASYNC_ERROR" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>256</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="ERROR_FILE" />
+    </appender>
+
+    <!-- ============================================================ -->
+    <!-- Loggers Configuration by Package                             -->
+    <!-- ============================================================ -->
+
+    <!-- Security & Auth Loggers -->
+    <logger name="com.tuikhon.security" level="DEBUG" additivity="true">
+        <appender-ref ref="SECURITY_FILE" />
+    </logger>
+    <logger name="org.springframework.security" level="INFO" additivity="true">
+        <appender-ref ref="SECURITY_FILE" />
+    </logger>
+
+    <!-- Hibernate & Database SQL Loggers -->
+    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+        <appender-ref ref="SQL_FILE" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+    <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false">
+        <appender-ref ref="SQL_FILE" />
+    </logger>
+    <logger name="org.hibernate.type.descriptor.sql" level="TRACE" additivity="false">
+        <appender-ref ref="SQL_FILE" />
+    </logger>
+
+    <!-- ============================================================ -->
+    <!-- Profile Specific Configurations                              -->
+    <!-- ============================================================ -->
+
+    <!-- Local & Dev Profiles -->
+    <springProfile name="local,dev">
+        <logger name="com.tuikhon" level="DEBUG" />
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="APP_FILE" />
+            <appender-ref ref="ERROR_FILE" />
+        </root>
+    </springProfile>
+
+    <!-- Production Profile -->
+    <springProfile name="prod">
+        <logger name="com.tuikhon" level="INFO" />
+        <logger name="org.hibernate.SQL" level="WARN" />
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="ASYNC_APP" />
+            <appender-ref ref="ASYNC_ERROR" />
+        </root>
+    </springProfile>
+
+</configuration>

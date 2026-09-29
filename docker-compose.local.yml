@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+
+  redis-local:
+    image: redis:7-alpine
+    container_name: tuikhon-redis-local
+    ports:
+      - "6379:6379"
+
+  postgres-local:
+    image: postgres:16-alpine
+    container_name: tuikhon-postgres-local
+    environment:
+      POSTGRES_DB: tuikhon_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_local:/var/lib/postgresql/data
+
+volumes:
+  pgdata_local:
